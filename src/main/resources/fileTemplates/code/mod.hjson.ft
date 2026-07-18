@@ -1,0 +1,23 @@
+#the mod name as displayed in-game
+displayName: "${MINDUSTRY_DISPLAYNAME}"
+
+#the internal name of your mod
+name: "${MINDUSTRY_NAME}"
+
+#your name
+author: "${MINDUSTRY_AUTHOR}"
+
+#the fully qualified main class of the mod
+main: "${MINDUSTRY_MAIN}"
+
+#the mod description as seen in the mod dialog
+description: "${MINDUSTRY_DESCRIPTION}"
+
+#the mod version
+version: ${MINDUSTRY_VERSION}
+
+#the minimum game build required to run this mod
+minGameVersion: ${MINDUSTRY_MINGAMEVERSION}
+
+#this is a java mod
+java: true

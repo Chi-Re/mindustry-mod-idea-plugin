@@ -1,0 +1,26 @@
+<idea-plugin>
+    <id>com.example.mindustry-mod-generator</id>
+    <name>Mindustry Mod Generator</name>
+    <vendor email="support@example.com" url="https://example.com">ChiReS</vendor>
+
+    <description><![CDATA[
+        Generate Mindustry mod projects with Gradle build system.
+        Supports Kotlin DSL and Groovy DSL, auto-fills Mindustry/Arc versions.
+    ]]></description>
+
+    <extensions defaultExtensionNs="com.intellij">
+<!--        <newProjectWizard.generator-->
+<!--            implementation="com.example.generators.GeneratorMindustryProjectWizard"/>-->
+<!--        <moduleType-->
+<!--                id="MINDUSTRY_MOD_PROJECT" classpathProvider="true" implementationClass="com.example.generators.MindustryModuleType"/>-->
+<!--        <moduleBuilder-->
+<!--                builderClass="com.example.test.Test"-->
+<!--                id="DEMO_STEP"-->
+<!--                order="first"/>-->
+<!--        <framework.type-->
+<!--                implementation="com.example.test.DemoFramework"/>-->
+        <moduleType id="MINDUSTRY_MOD_PROJECT"
+                    implementationClass="com.example.generators.MindustryModuleType"/>
+        <moduleBuilder id="MINDUSTRY_MODULE" builderClass="com.example.generators.MindustryProjectModuleBuilder"/>
+    </extensions>
+</idea-plugin>
