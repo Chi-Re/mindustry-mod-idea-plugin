@@ -1,4 +1,4 @@
-package com.example.generators;
+package chire.idea.mindustry.generators;
 
 import com.intellij.ide.starters.local.StarterContextProvider;
 import com.intellij.ide.starters.local.wizard.StarterInitialStep;
@@ -17,8 +17,8 @@ import org.jetbrains.concurrency.Promise;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.example.generators.MindustryProjectModuleBuilder.PROJECT_MODEL_KEY;
-import static com.example.generators.MindustryProjectWizardBundle.bundle;
+import static chire.idea.mindustry.generators.MindustryProjectModuleBuilder.PROJECT_MODEL_KEY;
+import static chire.idea.mindustry.generators.MindustryProjectWizardBundle.bundle;
 import static com.intellij.ui.dsl.builder.UtilsKt.DEFAULT_COMMENT_WIDTH;
 import static org.jetbrains.concurrency.Promises.runAsync;
 

@@ -1,4 +1,4 @@
-package com.example.generators;
+package chire.idea.mindustry.generators;
 
 public class MindustryProjectModel{
     public PluginCoordinates pluginCoordinates = new PluginCoordinates();

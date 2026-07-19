@@ -1,7 +1,6 @@
-package com.example.generators;
+package chire.idea.mindustry.generators;
 
 import com.intellij.AbstractBundle;
-import org.jetbrains.annotations.NotNull;
 
 public class MindustryProjectWizardBundle extends AbstractBundle{
 

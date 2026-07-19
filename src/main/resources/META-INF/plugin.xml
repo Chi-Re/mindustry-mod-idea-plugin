@@ -20,7 +20,7 @@
 <!--        <framework.type-->
 <!--                implementation="com.example.test.DemoFramework"/>-->
         <moduleType id="MINDUSTRY_MOD_PROJECT"
-                    implementationClass="com.example.generators.MindustryModuleType"/>
-        <moduleBuilder id="MINDUSTRY_MODULE" builderClass="com.example.generators.MindustryProjectModuleBuilder"/>
+                    implementationClass="chire.idea.mindustry.generators.MindustryModuleType"/>
+        <moduleBuilder id="MINDUSTRY_MODULE" builderClass="chire.idea.mindustry.generators.MindustryProjectModuleBuilder"/>
     </extensions>
 </idea-plugin>

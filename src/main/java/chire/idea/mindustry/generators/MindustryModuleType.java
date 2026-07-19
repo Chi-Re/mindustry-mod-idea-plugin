@@ -1,4 +1,4 @@
-package com.example.generators;
+package chire.idea.mindustry.generators;
 
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.ModuleTypeManager;

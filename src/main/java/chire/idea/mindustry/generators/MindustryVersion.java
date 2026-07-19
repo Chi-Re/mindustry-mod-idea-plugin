@@ -1,4 +1,4 @@
-package com.example.generators;
+package chire.idea.mindustry.generators;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;

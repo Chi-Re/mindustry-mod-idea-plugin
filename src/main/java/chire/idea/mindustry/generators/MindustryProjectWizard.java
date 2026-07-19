@@ -1,4 +1,4 @@
-package com.example.generators;
+package chire.idea.mindustry.generators;
 
 import com.intellij.ide.wizard.GeneratorNewProjectWizard;
 import com.intellij.ide.wizard.NewProjectWizardChainStep;

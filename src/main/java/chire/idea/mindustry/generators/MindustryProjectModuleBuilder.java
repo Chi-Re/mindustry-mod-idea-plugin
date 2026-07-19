@@ -1,4 +1,4 @@
-package com.example.generators;
+package chire.idea.mindustry.generators;
 
 import com.intellij.ide.fileTemplates.FileTemplateManager;
 import com.intellij.ide.starters.local.*;
