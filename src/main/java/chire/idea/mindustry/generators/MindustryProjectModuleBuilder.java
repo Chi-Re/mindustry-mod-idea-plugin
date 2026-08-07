@@ -1,5 +1,12 @@
 package chire.idea.mindustry.generators;
 
+import chire.idea.mindustry.run.MindustryConfigurationType;
+import chire.idea.mindustry.run.MindustryRunBundle;
+import chire.idea.mindustry.run.MindustryRunConfiguration;
+import com.intellij.execution.RunManager;
+import com.intellij.execution.RunnerAndConfigurationSettings;
+import com.intellij.execution.configurations.ConfigurationFactory;
+import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.ide.fileTemplates.FileTemplateManager;
 import com.intellij.ide.starters.local.*;
 import com.intellij.ide.starters.local.wizard.StarterInitialStep;
@@ -9,6 +16,7 @@ import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.ConfigurationException;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import com.intellij.openapi.util.IconLoader;
@@ -161,6 +169,28 @@ public class MindustryProjectModuleBuilder extends StarterModuleBuilder {
         }
 
         super.setupModule(module);
+
+        installRunConfiguration(module);
+    }
+
+    private void installRunConfiguration(@NotNull Module module) {
+        Project project = module.getProject();
+        RunManager runManager = RunManager.getInstance(project);
+
+        for (RunConfiguration existing : runManager.getAllConfigurationsList()) {
+            if (existing instanceof MindustryRunConfiguration) {
+                return;
+            }
+        }
+
+        ConfigurationFactory factory = MindustryConfigurationType.getInstance().getConfigurationFactories()[0];
+        MindustryRunConfiguration configuration =
+                new MindustryRunConfiguration(project, factory, MindustryRunBundle.bundle("run.configuration.name"));
+        configuration.getConfigurationModule().setModule(module);
+
+        RunnerAndConfigurationSettings settings = runManager.createConfiguration(configuration, factory);
+        runManager.addConfiguration(settings);
+        runManager.setSelectedConfiguration(settings);
     }
 
     @Override
