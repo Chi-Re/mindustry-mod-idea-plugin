@@ -19,8 +19,7 @@ public final class MindustryGameDownloader {
     }
 
     public static @NotNull String buildDownloadUrl(@NotNull String kind, @NotNull String version) {
-        MindustrySettingsState settings = MindustrySettingsState.getInstance();
-        return buildDownloadUrl(kind, version, settings.mirrorUrl, settings.currentMirrorPrefix());
+        return MindustrySettingsState.getInstance().applyMirror(baseDownloadUrl(kind, version));
     }
 
     public static @NotNull String buildDownloadUrl(@NotNull String kind, @NotNull String version,

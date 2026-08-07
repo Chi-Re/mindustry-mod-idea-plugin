@@ -176,14 +176,14 @@ public class MindustryVersionTablePanel {
         if (mirrorUrlSupplier != null) {
             return mirrorUrlSupplier.get();
         }
-        return MindustrySettingsState.getInstance().mirrorUrl;
+        return MindustrySettingsState.currentMirrorUrl();
     }
 
     private boolean currentMirrorPrefix() {
         if (mirrorPrefixSupplier != null) {
             return mirrorPrefixSupplier.getAsBoolean();
         }
-        return MindustrySettingsState.getInstance().currentMirrorPrefix();
+        return MindustrySettingsState.currentMirrorPrefix();
     }
 
     private void loadPage(boolean force) {

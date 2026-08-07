@@ -57,11 +57,25 @@ public final class MindustrySettingsState implements PersistentStateComponent<Mi
         return prefixMode ? mirrorUrl + originalUrl : originalUrl;
     }
 
+    /**
+     * The currently effective mirror URL from the settings.
+     */
+    public static String currentMirrorUrl() {
+        return getInstance().mirrorUrl;
+    }
+
+    /**
+     * Whether the currently effective mirror uses prefix mode.
+     */
+    public static boolean currentMirrorPrefix() {
+        return getInstance().isCurrentMirrorPrefix();
+    }
+
     public String applyMirror(String originalUrl) {
         return applyMirror(originalUrl, mirrorUrl, currentMirrorPrefix());
     }
 
-    public boolean currentMirrorPrefix() {
+    private boolean isCurrentMirrorPrefix() {
         for (MirrorEntry entry : mirrors) {
             if (mirrorUrl != null && mirrorUrl.equals(entry.url)) {
                 return entry.prefixMode;

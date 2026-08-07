@@ -75,6 +75,8 @@ public class MindustryModuleStep extends StarterInitialStep {
         }).resizableRow();
 
         //触发创建
+        //镜像可能已变更，清除版本缓存确保首次加载与当前设置一致
+        MindustryVersion.MindustryVersionKind.clearAllCache();
         mindustryVersionKindGraphProperty.set(MindustryVersion.MindustryVersionKind.Stable);
 
         mainProperty.set(getGroupIdProperty().get() + "." + getArtifactIdProperty().get());

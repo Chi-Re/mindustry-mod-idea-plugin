@@ -48,8 +48,7 @@ public class MindustryVersion {
         }
 
         public List<String> getVersions(int page, boolean force) {
-            MindustrySettingsState settings = MindustrySettingsState.getInstance();
-            return getVersions(page, force, settings.mirrorUrl, settings.currentMirrorPrefix());
+            return getVersions(page, force, MindustrySettingsState.currentMirrorUrl(), MindustrySettingsState.currentMirrorPrefix());
         }
 
         public List<String> getVersions(int page, boolean force, String mirrorUrl, boolean prefixMode) {
@@ -70,6 +69,12 @@ public class MindustryVersion {
 
         public void clearCache() {
             versions.clear();
+        }
+
+        public static void clearAllCache() {
+            for (MindustryVersionKind kind : values()) {
+                kind.clearCache();
+            }
         }
     }
 
