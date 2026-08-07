@@ -1,87 +1,119 @@
 package chire.idea.mindustry.generators;
 
+import chire.idea.mindustry.settings.MindustrySettingsState;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class MindustryVersion {
+    public static final int PAGE_SIZE = 100;
 
     public enum MindustryVersionKind {
-        Stable{
+        Stable {
             @Override
             String[] urls() {
-                return new String[]{"https://gh.noki.icu/https://api.github.com/repos/Anuken/Mindustry/tags"};
+                return new String[]{"https://api.github.com/repos/Anuken/Mindustry/tags"};
             }
         },
 
-        Build{
+        Build {
             @Override
             String[] urls() {
-//                return new String[]{"https://gh.noki.icu/https://api.github.com/repos/Anuken/MindustryBuilds/tags"};
-                return new String[]{};
-            }
-
-            @Override
-            public List<String> getVersions(int page) {
-                return List.of("be");
+                return new String[]{"https://api.github.com/repos/Anuken/MindustryBuilds/tags"};
             }
         };
 
-        private HashMap<Integer, List<String>> versions = new HashMap<>();
+        private final ConcurrentHashMap<Integer, List<String>> versions = new ConcurrentHashMap<>();
 
         abstract String[] urls();
 
+        public List<String> getVersions() {
+            return getVersions(1, false);
+        }
+
         public List<String> getVersions(int page) {
-            if (!versions.containsKey(page)) versions.put(page, new ArrayList<>());
+            return getVersions(page, false);
+        }
+
+        public List<String> getVersions(int page, boolean force) {
+            MindustrySettingsState settings = MindustrySettingsState.getInstance();
+            return getVersions(page, force, settings.mirrorUrl, settings.currentMirrorPrefix());
+        }
+
+        public List<String> getVersions(int page, boolean force, String mirrorUrl, boolean prefixMode) {
+            if (force) {
+                versions.remove(page);
+            }
+
+            if (!versions.containsKey(page)) {
+                versions.put(page, new ArrayList<>());
+            }
 
             if (versions.get(page).isEmpty()) {
-                versions.put(page, getMiraiVersionList(this, page));
+                versions.put(page, MindustryVersion.getMiraiVersionList(this, page, mirrorUrl, prefixMode));
             }
 
-            return versions.get(page).stream().toList();
+            return new ArrayList<>(versions.get(page));
         }
 
-        public List<String> getVersions() {
-            return getVersions(1);
+        public void clearCache() {
+            versions.clear();
         }
     }
 
-    public static List<String> getMiraiVersionList(MindustryVersionKind kind, int page) {
-        String[] urls = kind.urls();
+    public static List<String> getMiraiVersionList(MindustryVersionKind kind, int page, String mirrorUrl, boolean prefixMode) {
+        RequestConfig config = RequestConfig.custom()
+                .setConnectTimeout(10_000)
+                .setSocketTimeout(15_000)
+                .build();
 
-        for (String url : urls) {
-            CloseableHttpClient httpclient = HttpClients.createDefault();
-            HttpGet httpget = new HttpGet(url);
+        IOException lastError = null;
 
-            try(CloseableHttpResponse response = httpclient.execute(httpget)) {
-                HttpEntity entity = response.getEntity();
-                String result = EntityUtils.toString(entity);
-                EntityUtils.consume(entity);
+        try (CloseableHttpClient httpclient = HttpClients.custom().setDefaultRequestConfig(config).build()) {
+            for (String url : kind.urls()) {
+                String mirrored = MindustrySettingsState.applyMirror(url, mirrorUrl, prefixMode);
 
-                try {
-                    response.close();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                LinkedHashSet<String> candidates = new LinkedHashSet<>();
+                candidates.add(mirrored);
+                candidates.add(url);
+
+                for (String candidate : candidates) {
+                    String requestUrl = candidate + "?per_page=" + PAGE_SIZE + "&page=" + page;
+
+                    try (CloseableHttpResponse response = httpclient.execute(new HttpGet(requestUrl))) {
+                        HttpEntity entity = response.getEntity();
+                        String result = EntityUtils.toString(entity);
+                        EntityUtils.consume(entity);
+
+                        List<String> versions = extractVersions(result);
+
+                        if (!versions.isEmpty()) {
+                            return versions;
+                        }
+                    } catch (IOException e) {
+                        lastError = e;
+                    }
                 }
-
-                return extractVersions(result);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
+        } catch (IOException e) {
+            lastError = e;
         }
 
-        throw new RuntimeException("Connection failed!");
+        throw new RuntimeException("Connection failed!" + (lastError == null ? "" : " " + lastError.getMessage()), lastError);
     }
+
     private static List<String> extractVersions(String context) {
         Pattern pattern = Pattern.compile("name\":\"\\s*(.*?)\\s*\"");
         Matcher matcher = pattern.matcher(context);

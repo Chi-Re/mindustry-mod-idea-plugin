@@ -14,5 +14,6 @@ public class MindustryProjectModel{
         public String description = "A Mindustry Java mod template.";
         public String version = "1.0";
         public String minGameVersion = "158";
+        public String mindustryVersion = "latest";
     }
 }

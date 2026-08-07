@@ -5,6 +5,7 @@ import com.intellij.ide.starters.local.wizard.StarterInitialStep;
 import com.intellij.openapi.observable.properties.GraphProperty;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.dsl.builder.BuilderKt;
 import com.intellij.ui.dsl.builder.Cell;
 import com.intellij.ui.dsl.builder.HyperlinkEventAction;
 import com.intellij.ui.dsl.builder.Panel;
@@ -12,10 +13,14 @@ import com.intellij.ui.dsl.builder.Row;
 import com.intellij.util.execution.ParametersListUtil;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.concurrency.Promise;
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static chire.idea.mindustry.generators.MindustryProjectModuleBuilder.PROJECT_MODEL_KEY;
 import static chire.idea.mindustry.generators.MindustryProjectWizardBundle.bundle;
@@ -35,6 +40,13 @@ public class MindustryModuleStep extends StarterInitialStep {
 
     private final GraphProperty<Boolean> versionSynchronous = getPropertyGraph().property(false);
 
+    private Cell<ComboBox<String>> gameVersionBoxCell;
+    private Cell<ComboBox<String>> minGameVersionBoxCell;
+    private JButton pageMinusButton;
+    private JButton pagePlusButton;
+    private JLabel pageLabel;
+    private boolean hasNextPage = true;
+
     public MindustryModuleStep(@NotNull StarterContextProvider parent) {
         super(parent);
     }
@@ -51,14 +63,26 @@ public class MindustryModuleStep extends StarterInitialStep {
 
     @Override
     protected void addFieldsAfter(@NotNull Panel layout) {
-        layout.group(bundle.getMessage("title.plugin.information"), true, panel -> {
-            panel.row(bundle.getMessage("label.plugin.displayName"), row -> {
-//                var field = row.modelTextField().onChanged((jbTextField) -> {
-//                    model.pluginCoordinates.displayName = jbTextField.getText();
-//
-//                    return Unit.INSTANCE;
-//                }).focused().getComponent();
+        JTabbedPane tabs = new JTabbedPane();
 
+        tabs.addTab(bundle.getMessage("tab.mod.information"), buildModInfoPanel());
+        tabs.addTab(bundle.getMessage("tab.game.version"), buildGameVersionPanel());
+
+        layout.row("", r -> {
+            r.cell(tabs).resizableColumn();
+            r.resizableRow();
+            return Unit.INSTANCE;
+        }).resizableRow();
+
+        //触发创建
+        mindustryVersionKindGraphProperty.set(MindustryVersion.MindustryVersionKind.Stable);
+
+        mainProperty.set(getGroupIdProperty().get() + "." + getArtifactIdProperty().get());
+    }
+
+    private JPanel buildModInfoPanel() {
+        return BuilderKt.panel(panel -> {
+            panel.row(bundle.getMessage("label.plugin.displayName"), row -> {
                 var field = modelTextField(row.textField(), () -> "displayName").focused().getComponent();
 
                 field.setColumns(25);
@@ -109,13 +133,13 @@ public class MindustryModuleStep extends StarterInitialStep {
                 rowComment(row, bundle.getMessage("comment.mindustry.main"));
 
                 getGroupIdProperty().afterChange(string -> {
-                    mainProperty.set(string+"."+getArtifactIdProperty().get());
+                    mainProperty.set(string + "." + getArtifactIdProperty().get());
 
                     return Unit.INSTANCE;
                 });
 
                 getArtifactIdProperty().afterChange(string -> {
-                    mainProperty.set(getGroupIdProperty().get()+"."+string);
+                    mainProperty.set(getGroupIdProperty().get() + "." + string);
 
                     return Unit.INSTANCE;
                 });
@@ -131,14 +155,25 @@ public class MindustryModuleStep extends StarterInitialStep {
                     return Unit.INSTANCE;
                 });
 
-//                getGroupIdProperty().afterChange(string -> {
-//
-//                    return Unit.INSTANCE;
-//                });
+                return Unit.INSTANCE;
+            });
+
+            panel.row(bundle.getMessage("label.plugin.version"), row -> {
+                var field = modelTextField(row.textField(), () -> "version").focused().getComponent();
+
+                field.setColumns(25);
+
+                rowComment(row, bundle.getMessage("comment.mindustry.version"));
 
                 return Unit.INSTANCE;
             });
 
+            return Unit.INSTANCE;
+        });
+    }
+
+    private JPanel buildGameVersionPanel() {
+        return BuilderKt.panel(panel -> {
             panel.row(bundle.getMessage("label.version.kind"), row -> {
                 row.segmentedButton(Arrays.stream(MindustryVersion.MindustryVersionKind.values()).toList(), (itemPresentation, string) -> {
                     switch (string) {
@@ -155,57 +190,73 @@ public class MindustryModuleStep extends StarterInitialStep {
 
                 rowComment(row, bundle.getMessage("comment.version.kind"));
 
-                //TODO 旧版本游戏可能存在问题，比如Arc版本不匹配。
-//                row.intTextField(new IntRange(1, 1000), );
-
                 return Unit.INSTANCE;
             });
 
-            panel.row(bundle.getMessage("label.plugin.version"), row -> {
-                var box = row.comboBox(List.of("None"), null).enabled(false).onChanged(objectComboBox -> {
-                    mindustryVersionGraphProperty.set(objectComboBox.getItem().toString());
+            panel.row(bundle.getMessage("label.plugin.gameVersion"), row -> {
+                gameVersionBoxCell = row.comboBox(List.of("None"), null).enabled(false).onChanged(objectComboBox -> {
+                    String value = objectComboBox.getItem() == null ? "" : objectComboBox.getItem().toString();
 
-                    return Unit.INSTANCE;
-                });
-
-                mindustryVersionKindGraphProperty.afterChange(arg -> {
-                    updateVersionItems(box, arg);
-
-                    return Unit.INSTANCE;
-                });
-
-                rowComment(row, bundle.getMessage("comment.mindustry.version"));
-
-                return Unit.INSTANCE;
-            });
-
-            panel.row(bundle.getMessage("label.plugin.minGameVersion"), row -> {
-                var box = row.comboBox(List.of("None"), null).enabled(false).onChanged(objectComboBox -> {
-                    model.pluginCoordinates.minGameVersion = objectComboBox.getItem().toString();
-
-                    return Unit.INSTANCE;
-                });
-
-                mindustryVersionGraphProperty.afterChange(string -> {
-                    model.pluginCoordinates.version = string;
-
-                    if (versionSynchronous.get()) {
-                        box.getComponent().setItem(string);
+                    if (isValidVersion(value)) {
+                        mindustryVersionGraphProperty.set(value);
                     }
 
                     return Unit.INSTANCE;
                 });
 
-                mindustryVersionKindGraphProperty.afterChange(arg -> {
-                    if (!versionSynchronous.get()) {
-                        updateVersionItems(box, arg);
+                pageMinusButton = new JButton("-");
+                pageLabel = new JLabel("1", SwingConstants.CENTER);
+                pagePlusButton = new JButton("+");
+
+                pageMinusButton.setPreferredSize(new Dimension(28, 28));
+                pagePlusButton.setPreferredSize(new Dimension(28, 28));
+                pageLabel.setPreferredSize(new Dimension(40, 28));
+
+                pageMinusButton.addActionListener(e -> {
+                    if (mindustryVersionPage.get() > 1) {
+                        mindustryVersionPage.set(mindustryVersionPage.get() - 1);
+                    }
+                });
+
+                pagePlusButton.addActionListener(e -> {
+                    if (hasNextPage) {
+                        mindustryVersionPage.set(mindustryVersionPage.get() + 1);
+                    }
+                });
+
+                row.cell(pageMinusButton);
+                row.cell(pageLabel);
+                row.cell(pagePlusButton);
+
+                rowComment(row, bundle.getMessage("comment.mindustry.gameVersion"));
+
+                return Unit.INSTANCE;
+            });
+
+            panel.row(bundle.getMessage("label.plugin.minGameVersion"), row -> {
+                minGameVersionBoxCell = row.comboBox(List.of("None"), null).enabled(false).onChanged(objectComboBox -> {
+                    String value = objectComboBox.getItem() == null ? "" : objectComboBox.getItem().toString();
+
+                    if (isValidVersion(value)) {
+                        model.pluginCoordinates.minGameVersion = value;
                     }
 
                     return Unit.INSTANCE;
                 });
 
                 row.checkBox(bundle.getMessage("text.version.synchronous")).onChanged(jbCheckBox -> {
-                    versionSynchronous.set(jbCheckBox.isSelected());
+                    boolean checked = jbCheckBox.isSelected();
+
+                    versionSynchronous.set(checked);
+
+                    if (checked) {
+                        String current = mindustryVersionGraphProperty.get();
+
+                        if (current != null && !current.isEmpty()) {
+                            minGameVersionBoxCell.getComponent().setItem(current);
+                            model.pluginCoordinates.minGameVersion = current;
+                        }
+                    }
 
                     return Unit.INSTANCE;
                 });
@@ -215,13 +266,68 @@ public class MindustryModuleStep extends StarterInitialStep {
                 return Unit.INSTANCE;
             });
 
-            //触发创建
-            mindustryVersionKindGraphProperty.set(MindustryVersion.MindustryVersionKind.Stable);
+            mindustryVersionGraphProperty.afterChange(string -> {
+                if (string != null && !string.isEmpty()) {
+                    model.pluginCoordinates.mindustryVersion = string;
+
+                    if (versionSynchronous.get()) {
+                        minGameVersionBoxCell.getComponent().setItem(string);
+                        model.pluginCoordinates.minGameVersion = string;
+                    }
+                }
+
+                return Unit.INSTANCE;
+            });
+
+            mindustryVersionKindGraphProperty.afterChange(arg -> {
+                mindustryVersionPage.set(1);
+
+                if (!versionSynchronous.get()) {
+                    updateVersionItems(minGameVersionBoxCell, arg, 1, null);
+                }
+
+                return Unit.INSTANCE;
+            });
+
+            mindustryVersionPage.afterChange(page -> {
+                loadGameVersions(mindustryVersionKindGraphProperty.get(), page);
+
+                return Unit.INSTANCE;
+            });
 
             return Unit.INSTANCE;
         });
+    }
 
-        mainProperty.set(getGroupIdProperty().get()+"."+getArtifactIdProperty().get());
+    private boolean isValidVersion(String value) {
+        if (value == null || value.isEmpty()) {
+            return false;
+        }
+        if ("None".equals(value)) {
+            return false;
+        }
+        if (bundle.getMessage("label.mirai.version.loading").equals(value)) {
+            return false;
+        }
+        return !bundle.getMessage("label.mirai.version.loadFailed").equals(value);
+    }
+
+    private void loadGameVersions(MindustryVersion.MindustryVersionKind kind, int page) {
+        pageMinusButton.setEnabled(false);
+        pagePlusButton.setEnabled(false);
+
+        updateVersionItems(gameVersionBoxCell, kind, page, versions -> {
+            hasNextPage = versions == null || versions.size() >= MindustryVersion.PAGE_SIZE;
+            updatePageControls();
+        });
+    }
+
+    private void updatePageControls() {
+        int page = mindustryVersionPage.get();
+
+        pageLabel.setText(String.valueOf(page));
+        pageMinusButton.setEnabled(page > 1);
+        pagePlusButton.setEnabled(hasNextPage);
     }
 
     private <T extends JBTextField> Cell<T> modelTextField(Cell<T> row, ModelBox box) {
@@ -240,7 +346,10 @@ public class MindustryModuleStep extends StarterInitialStep {
         row.rowComment(string, DEFAULT_COMMENT_WIDTH, HyperlinkEventAction.HTML_HYPERLINK_INSTANCE);
     }
 
-    public @NotNull Promise<List<String>> updateVersionItems(Cell<ComboBox<String>> versionCell, MindustryVersion.MindustryVersionKind kind){
+    public @NotNull Promise<List<String>> updateVersionItems(Cell<ComboBox<String>> versionCell,
+                                                             MindustryVersion.MindustryVersionKind kind,
+                                                             int page,
+                                                             @Nullable Consumer<List<String>> onDone) {
         versionCell.getComponent().setEnabled(false);
 
         versionCell.enabled(false);
@@ -249,7 +358,7 @@ public class MindustryModuleStep extends StarterInitialStep {
         versionCell.getComponent().addItem(bundle.getMessage("label.mirai.version.loading"));
 
         return runAsync(() -> {
-            var list = kind.getVersions();
+            var list = kind.getVersions(page);
 
             versionCell.getComponent().removeAllItems();
 
@@ -261,6 +370,19 @@ public class MindustryModuleStep extends StarterInitialStep {
         }).onProcessed(versions -> {
             versionCell.getComponent().setEditable(true);
             versionCell.enabled(true);
+
+            if (onDone != null) {
+                onDone.accept(versions);
+            }
+        }).onError(error -> {
+            versionCell.getComponent().removeAllItems();
+            versionCell.getComponent().addItem(bundle.getMessage("label.mirai.version.loadFailed"));
+            versionCell.getComponent().setEditable(true);
+            versionCell.enabled(true);
+
+            if (onDone != null) {
+                onDone.accept(null);
+            }
         });
     }
 
