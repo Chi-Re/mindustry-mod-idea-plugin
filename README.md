@@ -59,18 +59,6 @@
 
 ---
 
-## 技术实现
-
-- **工程向导**：基于 IDE Starter 框架（`StarterModuleBuilder` + `StarterInitialStep`），页签布局，模板属性通过 `MINDUSTRY_*` 注入文件模板
-- **运行配置**：`ModuleBasedConfiguration` + `JavaCommandLineState`；构建经 `GeneralCommandLine` 调用外部 wrapper（30 分钟超时）
-- **调试**：框架本地调试路径 —— `RemoteConnectionBuilder` 注入 jdwp（默认 `server=n`，游戏主动连接），调试器先 `SocketListen` 监听端口，应用启动后连接，无需自定义附加逻辑
-- **版本获取**：GitHub tags API（`?per_page=100&page=N`）；Apache HttpClient（10s 连接 / 15s 读取超时），镜像失败自动回退直连，空响应视为失败
-- **下载**：`HttpRequests`（10s 连接 / 60s 读取超时，跟随重定向）
-- **持久化**：应用级 `PersistentStateComponent`（`mindustry-settings.xml`）
-- **国际化**：中英文消息包（`MindustryProjectWizardBundle` / `MindustryRunBundle`）
-
----
-
 ## 项目目录结构
 
 ```
@@ -101,7 +89,7 @@ A: 调试模式默认 `suspend=y`（游戏暂停在入口等待调试器）。�
 A: 存放在"游戏 JAR 路径"所在目录，文件名为 `Mindustry-<版本>.jar` / `Mindustry-BE-<版本>.jar`，可多版本共存。
 
 **Q: 镜像的"前缀模式"是什么？**
-A: 勾选时请求地址为 `镜像URL + 原始URL`（如 `https://gh.noki.icu/https://api.github.com/...`）；不勾选则直接使用原始 URL。
+A: 勾选时请求地址为 `镜像URL + 原始URL`（如 `https://gh.noki.icu/https://api.github.com/...` ）；不勾选则直接使用原始 URL。
 
 **Q: 断点不生效？**
 A: 请确认游戏版本不低于模组的 `minGameVersion`，并确保已按 F9 恢复运行。
@@ -123,7 +111,3 @@ A: 请确认游戏版本不低于模组的 `minGameVersion`，并确保已按 F9
 - 依赖 IDE 插件：`com.intellij.java`
 
 ---
-
-## 许可证
-
-本项目目前未附带 LICENSE 文件，所有权利归作者（ChiReS）所有。如需使用或分发，请先联系作者。
