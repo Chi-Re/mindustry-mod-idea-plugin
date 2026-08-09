@@ -240,7 +240,7 @@ public class MindustryModuleStep extends StarterInitialStep {
                     String value = objectComboBox.getItem() == null ? "" : objectComboBox.getItem().toString();
 
                     if (isValidVersion(value)) {
-                        model.pluginCoordinates.minGameVersion = value;
+                        model.pluginCoordinates.minGameVersion = stripVersionPrefix(value);
                     }
 
                     return Unit.INSTANCE;
@@ -256,7 +256,7 @@ public class MindustryModuleStep extends StarterInitialStep {
 
                         if (current != null && !current.isEmpty()) {
                             minGameVersionBoxCell.getComponent().setItem(current);
-                            model.pluginCoordinates.minGameVersion = current;
+                            model.pluginCoordinates.minGameVersion = stripVersionPrefix(current);
                         }
                     }
 
@@ -274,7 +274,7 @@ public class MindustryModuleStep extends StarterInitialStep {
 
                     if (versionSynchronous.get()) {
                         minGameVersionBoxCell.getComponent().setItem(string);
-                        model.pluginCoordinates.minGameVersion = string;
+                        model.pluginCoordinates.minGameVersion = stripVersionPrefix(string);
                     }
                 }
 
@@ -312,6 +312,14 @@ public class MindustryModuleStep extends StarterInitialStep {
             return false;
         }
         return !bundle.getMessage("label.mirai.version.loadFailed").equals(value);
+    }
+
+    private static String stripVersionPrefix(String version) {
+        if (version != null && version.length() > 1
+                && version.charAt(0) == 'v' && Character.isDigit(version.charAt(1))) {
+            return version.substring(1);
+        }
+        return version;
     }
 
     private void loadGameVersions(MindustryVersion.MindustryVersionKind kind, int page) {
