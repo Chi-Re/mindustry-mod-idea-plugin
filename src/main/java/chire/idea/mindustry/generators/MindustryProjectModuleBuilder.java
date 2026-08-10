@@ -98,8 +98,9 @@ public class MindustryProjectModuleBuilder extends StarterModuleBuilder {
         }};
 
         MindustryProjectModel model = getStarterContext().getUserData(PROJECT_MODEL_KEY);
-
-        String[] le = model.pluginCoordinates.main.split("\\.");
+        if (model == null) {
+            model = new MindustryProjectModel();
+        }
 
         templateNames.put("ExampleJavaMod.java", "src/"+model.pluginCoordinates.main.replaceAll("\\.", "/")+".java");
 //        model.buildSystemType.createBuildSystem(model).collectAssets { assets.add(it) }
@@ -121,6 +122,9 @@ public class MindustryProjectModuleBuilder extends StarterModuleBuilder {
     @Override
     public @NotNull Map<String, Object> getTemplateProperties() {
         MindustryProjectModel model = getStarterContext().getUserData(PROJECT_MODEL_KEY);
+        if (model == null) {
+            model = new MindustryProjectModel();
+        }
         Map<String, Object> templateProperties = new HashMap<>();
 
         for (Field field : model.pluginCoordinates.getClass().getFields()) {

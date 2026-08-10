@@ -11,6 +11,7 @@ import com.intellij.ui.dsl.builder.HyperlinkEventAction;
 import com.intellij.ui.dsl.builder.Panel;
 import com.intellij.ui.dsl.builder.Row;
 import com.intellij.util.execution.ParametersListUtil;
+import com.intellij.util.ui.UIUtil;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -79,7 +80,40 @@ public class MindustryModuleStep extends StarterInitialStep {
         MindustryVersion.MindustryVersionKind.clearAllCache();
         mindustryVersionKindGraphProperty.set(MindustryVersion.MindustryVersionKind.Stable);
 
-        mainProperty.set(getGroupIdProperty().get() + "." + getArtifactIdProperty().get());
+        mainProperty.set(buildMainName());
+    }
+
+    private String buildMainName() {
+        String group = getGroupIdProperty().get();
+        String clazz = classNameFrom(getArtifactIdProperty().get());
+        return group == null || group.isBlank() ? clazz : group + "." + clazz;
+    }
+
+    private static String classNameFrom(String artifactId) {
+        if (artifactId == null || artifactId.isEmpty()) {
+            return "ExampleJavaMod";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        boolean upperNext = true;
+
+        for (char c : artifactId.toCharArray()) {
+            if (Character.isJavaIdentifierPart(c)) {
+                sb.append(upperNext ? Character.toUpperCase(c) : c);
+                upperNext = false;
+            } else {
+                upperNext = true;
+            }
+        }
+
+        String name = sb.toString();
+        if (name.isEmpty()) {
+            return "ExampleJavaMod";
+        }
+        if (!Character.isJavaIdentifierStart(name.charAt(0))) {
+            name = "M" + name;
+        }
+        return name;
     }
 
     private JPanel buildModInfoPanel() {
@@ -135,13 +169,13 @@ public class MindustryModuleStep extends StarterInitialStep {
                 rowComment(row, bundle.getMessage("comment.mindustry.main"));
 
                 getGroupIdProperty().afterChange(string -> {
-                    mainProperty.set(string + "." + getArtifactIdProperty().get());
+                    mainProperty.set(buildMainName());
 
                     return Unit.INSTANCE;
                 });
 
                 getArtifactIdProperty().afterChange(string -> {
-                    mainProperty.set(getGroupIdProperty().get() + "." + string);
+                    mainProperty.set(buildMainName());
 
                     return Unit.INSTANCE;
                 });
@@ -150,7 +184,7 @@ public class MindustryModuleStep extends StarterInitialStep {
                     model.pluginCoordinates.main = string;
 
                     model.mainClassName = getGroupIdProperty().get();
-                    model.packageClassName = getArtifactIdProperty().get();
+                    model.packageClassName = classNameFrom(getArtifactIdProperty().get());
 
                     field.setText(string);
 
@@ -367,32 +401,28 @@ public class MindustryModuleStep extends StarterInitialStep {
         versionCell.getComponent().removeAllItems();
         versionCell.getComponent().addItem(bundle.getMessage("label.mirai.version.loading"));
 
-        return runAsync(() -> {
-            var list = kind.getVersions(page);
+        return runAsync(() -> kind.getVersions(page)).onProcessed(versions -> {
+            UIUtil.invokeLaterIfNeeded(() -> {
+                versionCell.getComponent().removeAllItems();
+                versions.forEach(k -> versionCell.getComponent().addItem(k));
+                versionCell.getComponent().setEditable(true);
+                versionCell.enabled(true);
 
-            versionCell.getComponent().removeAllItems();
-
-            list.forEach(k -> {
-                versionCell.getComponent().addItem(k);
+                if (onDone != null) {
+                    onDone.accept(versions);
+                }
             });
-
-            return list;
-        }).onProcessed(versions -> {
-            versionCell.getComponent().setEditable(true);
-            versionCell.enabled(true);
-
-            if (onDone != null) {
-                onDone.accept(versions);
-            }
         }).onError(error -> {
-            versionCell.getComponent().removeAllItems();
-            versionCell.getComponent().addItem(bundle.getMessage("label.mirai.version.loadFailed"));
-            versionCell.getComponent().setEditable(true);
-            versionCell.enabled(true);
+            UIUtil.invokeLaterIfNeeded(() -> {
+                versionCell.getComponent().removeAllItems();
+                versionCell.getComponent().addItem(bundle.getMessage("label.mirai.version.loadFailed"));
+                versionCell.getComponent().setEditable(true);
+                versionCell.enabled(true);
 
-            if (onDone != null) {
-                onDone.accept(null);
-            }
+                if (onDone != null) {
+                    onDone.accept(null);
+                }
+            });
         });
     }
 

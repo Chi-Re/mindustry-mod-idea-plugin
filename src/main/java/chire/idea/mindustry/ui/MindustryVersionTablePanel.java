@@ -10,6 +10,7 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.dsl.builder.BuilderKt;
 import com.intellij.ui.table.JBTable;
+import com.intellij.util.ui.UIUtil;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -198,30 +199,34 @@ public class MindustryVersionTablePanel {
         Promises.runAsync(() -> kind.getVersions(page, force, mirrorUrl, prefix))
                 .onSuccess(versions -> applyVersions(kind, versions, mirrorUrl, prefix))
                 .onError(error -> {
-                    setLoading(false);
-                    statusLabel.setText(bundle("settings.text.loadFailed", error.getMessage()));
+                    UIUtil.invokeLaterIfNeeded(() -> {
+                        setLoading(false);
+                        statusLabel.setText(bundle("settings.text.loadFailed", error.getMessage()));
+                    });
                 });
     }
 
     private void applyVersions(MindustryVersion.MindustryVersionKind kind, List<String> versions,
                                String mirrorUrl, boolean prefix) {
-        try {
-            rows.clear();
-            for (String version : versions) {
-                rows.add(new VersionRow(
-                        version,
-                        MindustryGameDownloader.buildDownloadUrl(kind.name(), version, mirrorUrl, prefix),
-                        isDownloaded(kind, version)));
+        UIUtil.invokeLaterIfNeeded(() -> {
+            try {
+                rows.clear();
+                for (String version : versions) {
+                    rows.add(new VersionRow(
+                            version,
+                            MindustryGameDownloader.buildDownloadUrl(kind.name(), version, mirrorUrl, prefix),
+                            isDownloaded(kind, version)));
+                }
+                hasNext = versions.size() >= MindustryVersion.PAGE_SIZE;
+                pageLabel.setText(bundle("settings.label.page", page));
+                model.fireTableDataChanged();
+                statusLabel.setText(rows.isEmpty() ? bundle("settings.text.noVersions") : "");
+            } catch (Throwable t) {
+                statusLabel.setText(bundle("settings.text.loadFailed", t.getMessage()));
+            } finally {
+                setLoading(false);
             }
-            hasNext = versions.size() >= MindustryVersion.PAGE_SIZE;
-            pageLabel.setText(bundle("settings.label.page", page));
-            model.fireTableDataChanged();
-            statusLabel.setText(rows.isEmpty() ? bundle("settings.text.noVersions") : "");
-        } catch (Throwable t) {
-            statusLabel.setText(bundle("settings.text.loadFailed", t.getMessage()));
-        } finally {
-            setLoading(false);
-        }
+        });
     }
 
     private void setLoading(boolean loading) {
@@ -292,17 +297,21 @@ public class MindustryVersionTablePanel {
             }
             return null;
         }).onSuccess(unused -> {
-            row.downloading = false;
-            row.downloaded = true;
-            model.fireTableRowsUpdated(rowIndex, rowIndex);
-            statusLabel.setText(bundle("settings.text.downloadComplete", target));
-            if (onDownloaded != null) {
-                onDownloaded.accept(row.version, target);
-            }
+            UIUtil.invokeLaterIfNeeded(() -> {
+                row.downloading = false;
+                row.downloaded = true;
+                model.fireTableRowsUpdated(rowIndex, rowIndex);
+                statusLabel.setText(bundle("settings.text.downloadComplete", target));
+                if (onDownloaded != null) {
+                    onDownloaded.accept(row.version, target);
+                }
+            });
         }).onError(error -> {
-            row.downloading = false;
-            model.fireTableRowsUpdated(rowIndex, rowIndex);
-            statusLabel.setText(bundle("settings.text.downloadFailed", error.getMessage()));
+            UIUtil.invokeLaterIfNeeded(() -> {
+                row.downloading = false;
+                model.fireTableRowsUpdated(rowIndex, rowIndex);
+                statusLabel.setText(bundle("settings.text.downloadFailed", error.getMessage()));
+            });
         });
     }
 

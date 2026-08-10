@@ -20,6 +20,8 @@ import java.util.regex.Pattern;
 public class MindustryVersion {
     public static final int PAGE_SIZE = 100;
 
+    private static final Pattern TAG_NAME_PATTERN = Pattern.compile("\"name\"\\s*:\\s*\"([^\"]+)\"");
+
     public enum MindustryVersionKind {
         Stable {
             @Override
@@ -120,17 +122,23 @@ public class MindustryVersion {
     }
 
     private static List<String> extractVersions(String context) {
-        Pattern pattern = Pattern.compile("name\":\"\\s*(.*?)\\s*\"");
-        Matcher matcher = pattern.matcher(context);
+        Matcher matcher = TAG_NAME_PATTERN.matcher(context);
         List<String> versionStrings = new ArrayList<>();
 
         while (matcher.find()) {
             String version = matcher.group(1);
-            if (version != null && !version.isEmpty()) {
+            if (isVersionTag(version)) {
                 versionStrings.add(version);
             }
         }
 
         return versionStrings;
+    }
+
+    private static boolean isVersionTag(String version) {
+        if (version == null || version.isEmpty()) {
+            return false;
+        }
+        return version.matches("[vV]?\\d+([.\\w-]+)?");
     }
 }

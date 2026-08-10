@@ -12,16 +12,6 @@
     <depends>com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-<!--        <newProjectWizard.generator-->
-<!--            implementation="com.example.generators.GeneratorMindustryProjectWizard"/>-->
-<!--        <moduleType-->
-<!--                id="MINDUSTRY_MOD_PROJECT" classpathProvider="true" implementationClass="com.example.generators.MindustryModuleType"/>-->
-<!--        <moduleBuilder-->
-<!--                builderClass="com.example.test.Test"-->
-<!--                id="DEMO_STEP"-->
-<!--                order="first"/>-->
-<!--        <framework.type-->
-<!--                implementation="com.example.test.DemoFramework"/>-->
         <moduleType id="MINDUSTRY_MOD_PROJECT"
                     implementationClass="chire.idea.mindustry.generators.MindustryModuleType"/>
         <moduleBuilder id="MINDUSTRY_MODULE" builderClass="chire.idea.mindustry.generators.MindustryProjectModuleBuilder"/>

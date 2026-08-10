@@ -49,17 +49,23 @@ public final class MindustryGameDownloader {
         Path tmp = absolute.resolveSibling(absolute.getFileName() + ".tmp");
         Files.deleteIfExists(tmp);
 
-        HttpRequests.request(url)
-                .productNameAsUserAgent()
-                .redirectLimit(10)
-                .connect(request -> {
-                    try (InputStream in = request.getInputStream();
-                         OutputStream out = Files.newOutputStream(tmp)) {
-                        in.transferTo(out);
-                    }
-                    return null;
-                });
+        try {
+            HttpRequests.request(url)
+                    .productNameAsUserAgent()
+                    .redirectLimit(10)
+                    .connectTimeout(30_000)
+                    .readTimeout(60_000)
+                    .connect(request -> {
+                        try (InputStream in = request.getInputStream();
+                             OutputStream out = Files.newOutputStream(tmp)) {
+                            in.transferTo(out);
+                        }
+                        return null;
+                    });
 
-        Files.move(tmp, absolute, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(tmp, absolute, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
     }
 }
