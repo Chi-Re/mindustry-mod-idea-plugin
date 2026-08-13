@@ -1,4 +1,4 @@
-# Mindustry Mod Generator
+# Mindustry Mod Idea Plugin
 
 面向 IntelliJ IDEA 的 Mindustry Java 模组开发插件：工程向导、一键构建 / 安装 / 运行 / 调试。
 
@@ -119,7 +119,7 @@ A: 请确认游戏版本不低于模组的 `minGameVersion`，并确保已按 F9
 
 ## 兼容性
 
-- 目标 IDE：IntelliJ IDEA 2025.2（`since-build 252`，`until-build 252.*`）
+- 目标 IDE：IntelliJ IDEA **2025.1 及以上**（`since-build 251`，无上限，2025.2 及未来版本均可安装）
 - 语言：中文 / English
 - 依赖 IDE 插件：`com.intellij.java`
 
