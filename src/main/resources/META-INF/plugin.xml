@@ -1,7 +1,7 @@
 <idea-plugin>
-    <id>com.example.mindustry-mod-generator</id>
-    <name>Mindustry Mod Generator</name>
-    <vendor email="support@example.com" url="https://example.com">ChiReS</vendor>
+    <id>com.example.mindustry-mod</id>
+    <name>Mindustry Mod</name>
+    <vendor email="3531962676@qq.com" url="https://github.com/Chi-Re/mindustry-mod-idea-plugin">ChiReS</vendor>
 
     <description><![CDATA[
         Generate Mindustry mod projects with Gradle build system.
