@@ -53,6 +53,19 @@
 2. 点击 **Run**：构建 → 安装 → 启动游戏
 3. 点击 **Debug**：游戏以 `-debug` 模式启动并等待调试器附加；附加成功后按 **F9（Resume）** 游戏窗口出现，可打断点调试
 
+### DCEVM 结构级热替换（可选）
+
+普通 JDK 的调试热替换只支持修改方法体。如需在运行中**增删方法 / 字段、修改类结构**的实时热替换：
+
+1. 下载 DCEVM 版 JetBrains Runtime（JBR 17/21/25，见 JetBrainsRuntime Releases）
+2. 将 `hotswap-agent.jar`（HotswapAgent Releases）放入 JBR 的 `lib/hotswap` 目录
+3. 在 Project Structure 中将模块 / 项目 JDK 切换为该 JBR
+4. Debug 启动游戏，修改代码后按 **Rerun（Ctrl+F10）** 即可热替换
+
+插件在 Debug 启动时会自动检测 JDK 并在控制台提示是否支持结构级热替换；检测到 DCEVM 时会**自动添加 `-XX:+AllowEnhancedClassRedefinition`** 参数（可在控制台 "Launching Mindustry:" 命令行中确认）。注意：热替换仅作用于字节码，`loadContent()` 中已注册的游戏内容（方块、单位等）不会自动更新。
+
+TODO 注意！由于模组加载方式，这个功能可能失效，仅建议调试UI时使用。
+
 ### 配置游戏与镜像
 
 在 `Settings → Mindustry` 中选择游戏版本并点击下载（或手动指定游戏 JAR 路径）；必要时添加 / 切换镜像。

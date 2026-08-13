@@ -75,7 +75,12 @@ public class MindustryRunProfileState extends JavaCommandLineState {
         params.setModuleName(module.getName());
 
         if (DefaultDebugExecutor.EXECUTOR_ID.equals(getEnvironment().getExecutor().getId())) {
-             params.getProgramParametersList().add("-debug");
+            params.getProgramParametersList().add("-debug");
+
+            if (isDcevmJdk(sdk)
+                    && !params.getVMParametersList().hasParameter("-XX:+AllowEnhancedClassRedefinition")) {
+                params.getVMParametersList().add("-XX:+AllowEnhancedClassRedefinition");
+            }
         }
         return params;
     }
@@ -92,6 +97,10 @@ public class MindustryRunProfileState extends JavaCommandLineState {
         Path moduleDir = moduleDir(module);
 
         ConsoleView console = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
+
+        if (DefaultDebugExecutor.EXECUTOR_ID.equals(executor.getId())) {
+            printHotswapAdvice(console);
+        }
 
         if (options.isBuildBeforeRun()) {
             MindustryGradleBuilder.runTask(project, moduleDir, options.getGradleTask(), console);
@@ -118,6 +127,24 @@ public class MindustryRunProfileState extends JavaCommandLineState {
         });
         console.attachToProcess(gameHandler);
         return new DefaultExecutionResult(console, gameHandler);
+    }
+
+    private void printHotswapAdvice(ConsoleView console) {
+        Module module = configuration.getConfigurationModule().getModule();
+        Sdk sdk = module == null ? null : ModuleRootManager.getInstance(module).getSdk();
+        if (sdk == null) {
+            sdk = ProjectRootManager.getInstance(getEnvironment().getProject()).getProjectSdk();
+        }
+        if (isDcevmJdk(sdk)) {
+            print(console, bundle("run.text.hotswap.dcevm") + "\n");
+        } else {
+            print(console, bundle("run.text.hotswap.noDcevm") + "\n");
+        }
+    }
+
+    private static boolean isDcevmJdk(@Nullable Sdk sdk) {
+        String home = sdk == null ? null : sdk.getHomePath();
+        return home != null && Files.isDirectory(Path.of(home, "lib", "hotswap"));
     }
 
     private String launchingText() {
