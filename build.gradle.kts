@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdea("2025.2")
+        intellijIdea("2025.1")
         bundledPlugin("com.intellij.java")
         bundledPlugin("com.intellij.gradle")
     }
@@ -24,8 +24,7 @@ dependencies {
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "252"
-            untilBuild = "252.*"
+            sinceBuild = "251"
         }
     }
 }
