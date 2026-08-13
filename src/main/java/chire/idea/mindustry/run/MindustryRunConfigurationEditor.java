@@ -42,16 +42,17 @@ public class MindustryRunConfigurationEditor extends SettingsEditor<MindustryRun
                     r.cell(gradleTaskField);
                     return Unit.INSTANCE;
                 });
-                p.row(bundle("run.gameJarPath"), r -> {
-                    r.cell(gameJarPathField);
-                    rowComment(r, bundle("run.comment.gameJarPath"));
-                    return Unit.INSTANCE;
-                });
-                p.row(bundle("run.modsDirectory"), r -> {
-                    r.cell(modsDirectoryField);
-                    rowComment(r, bundle("run.comment.modsDirectory"));
-                    return Unit.INSTANCE;
-                });
+                //TODO 数据无法保存，但目前似乎没什么用。
+//                p.row(bundle("run.gameJarPath"), r -> {
+//                    r.cell(gameJarPathField);
+//                    rowComment(r, bundle("run.comment.gameJarPath"));
+//                    return Unit.INSTANCE;
+//                });
+//                p.row(bundle("run.modsDirectory"), r -> {
+//                    r.cell(modsDirectoryField);
+//                    rowComment(r, bundle("run.comment.modsDirectory"));
+//                    return Unit.INSTANCE;
+//                });
                 p.row("", r -> {
                     r.cell(buildBeforeRunBox);
                     return Unit.INSTANCE;
