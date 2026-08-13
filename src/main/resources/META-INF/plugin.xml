@@ -5,7 +5,7 @@
 
     <description><![CDATA[
         Generate Mindustry mod projects with Gradle build system.
-        Supports Kotlin DSL and Groovy DSL, auto-fills Mindustry/Arc versions.
+        Supports Groovy DSL, auto-fills Mindustry/Arc versions.
         Adds a Mindustry run configuration that builds a mod and launches the game (with debug support).
     ]]></description>
 
